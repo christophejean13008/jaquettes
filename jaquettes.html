@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mes jaquettes</title>
+<style>
+:root{--fond:#14161c;--carte:#1f232c;--trait:#2e3440;--txt:#eef0f4;--doux:#9aa3b2;--acc:#f5b301;--vert:#2fb36d;--orange:#f08c2e;--rouge:#e24c4b;--gris:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;background:var(--fond);color:var(--txt);min-height:100vh;padding-top:env(safe-area-inset-top);padding-bottom:40px;-webkit-tap-highlight-color:transparent}
+header{display:flex;align-items:center;gap:10px;padding:14px 16px}
+h1{font-size:21px;flex:1}
+.ico{background:var(--carte);border:1px solid var(--trait);color:var(--txt);border-radius:10px;width:42px;height:42px;font-size:19px;cursor:pointer}
+.actions{display:flex;gap:10px;padding:0 16px 12px;flex-wrap:wrap}
+.btn{flex:1;min-width:130px;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:650;background:var(--acc);color:#1a1a1a;cursor:pointer;font-family:inherit}
+.btn.sec{background:var(--carte);color:var(--txt);border:1px solid var(--trait)}
+.btn:disabled{opacity:.45}
+input[type=file]{display:none}
+#etat{padding:0 16px 12px;color:var(--doux);font-size:14px;min-height:20px}
+#etat.travail::before{content:"";display:inline-block;width:12px;height:12px;border:2px solid var(--acc);border-top-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-1px;animation:tour 1s linear infinite}
+@keyframes tour{to{transform:rotate(360deg)}}
+#scene{position:relative;margin:0 16px;border-radius:12px;overflow:hidden;display:none;background:#000}
+#scene img{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;pointer-events:none}
+.cadre{position:absolute;border:2px dashed rgba(255,255,255,.35);border-radius:6px;pointer-events:none}
+.badge{position:absolute;transform:translate(-50%,0);background:rgba(10,12,16,.86);border:2.5px solid var(--gris);border-radius:12px;padding:5px 9px 6px;text-align:center;touch-action:none;cursor:grab;max-width:44%;min-width:64px;box-shadow:0 3px 10px rgba(0,0,0,.5);user-select:none;-webkit-user-select:none}
+.badge .n{font-size:19px;font-weight:800;line-height:1.1}
+.badge .t{font-size:11px;color:#d7dbe3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge .g{font-size:10px;color:var(--doux);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge.flash,.carte.flash{animation:flash 1.2s}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(245,179,1,0)}30%{box-shadow:0 0 0 5px rgba(245,179,1,.9)}}
+#liste{padding:16px;display:grid;gap:12px}
+.carte{background:var(--carte);border:1px solid var(--trait);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+.carte h2{font-size:17px}
+.carte .meta{font-size:13px;color:var(--doux)}
+.moy{grid-row:1 / span 2;grid-column:2;align-self:start;text-align:center;border-radius:12px;padding:6px 10px;min-width:70px;font-weight:800;font-size:24px;color:#fff;background:var(--gris)}
+.moy small{display:block;font-size:11px;font-weight:600;opacity:.85}
+.genres{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.genres span{background:#2b3140;border-radius:20px;padding:3px 10px;font-size:12.5px}
+.sources{grid-column:1 / -1;font-size:13.5px;display:grid;gap:3px;margin-top:4px}
+.sources div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--trait);padding:3px 0}
+.sources b{font-weight:650}
+.bas{grid-column:1 / -1;display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.bas a{color:var(--acc);font-size:13px}
+.bas button{background:none;border:1px solid var(--trait);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.bas .esp{flex:1}
+dialog{margin:auto;background:var(--carte);color:var(--txt);border:1px solid var(--trait);border-radius:16px;padding:20px;width:min(92vw,460px)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{margin-bottom:12px}
+dialog label{display:block;font-size:14px;margin:12px 0 5px;color:var(--doux)}
+dialog input{width:100%;padding:11px;border-radius:10px;border:1px solid var(--trait);background:#14161c;color:var(--txt);font-size:15px}
+dialog p{font-size:12.5px;color:var(--doux);margin-top:6px;line-height:1.45}
+dialog a{color:var(--acc)}
+.vide{color:var(--doux);text-align:center;padding:30px 16px;font-size:15px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 Mes jaquettes</h1>
+  <button class="ico" id="b-reglages" title="Réglages">⚙️</button>
+</header>
+
+<div class="actions">
+  <label class="btn" for="f-cam" style="text-align:center">📷 Photographier</label>
+  <label class="btn sec" for="f-gal" style="text-align:center">🖼️ Galerie</label>
+  <input type="file" id="f-cam" accept="image/*" capture="environment">
+  <input type="file" id="f-gal" accept="image/*">
+</div>
+<div class="actions" id="actions2" style="display:none">
+  <button class="btn sec" id="b-ajout">＋ Ajouter un titre</button>
+  <button class="btn sec" id="b-export">💾 Enregistrer l'image</button>
+</div>
+
+<div id="etat"></div>
+<div id="scene"><img id="photo" alt=""></div>
+<div id="liste"><div class="vide">Photographie une page ou une étagère avec plusieurs jaquettes.<br>Les titres sont repérés, puis chaque jaquette reçoit sa note moyenne.</div></div>
+
+<dialog id="dlg">
+  <h3>Réglages</h3>
+  <label for="r-relais">Adresse du relais Albert</label>
+  <input id="r-relais" autocomplete="off">
+  <label for="r-omdb">Clé OMDb (facultative)</label>
+  <input id="r-omdb" autocomplete="off" placeholder="ex. 1a2b3c4d">
+  <p>Sans clé, les notes viennent de Wikidata (Rotten Tomatoes, Metacritic…) et de TVmaze pour les séries. Avec une clé gratuite (<a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com</a>, offre FREE, 1000 requêtes/jour), on ajoute la note IMDb et des notes plus à jour. La clé reste sur cet appareil.</p>
+  <div style="display:flex;gap:10px;margin-top:16px">
+    <button class="btn sec" id="r-annuler">Annuler</button>
+    <button class="btn" id="r-ok">Enregistrer</button>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+const RELAIS_DEFAUT = 'https://adaptedl-relais.chris333j.workers.dev';
+const MODELE_DEFAUT = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506';
+
+const $ = s => document.querySelector(s);
+const reg = {
+  get(k, d){ try{ const v = localStorage.getItem('jaq_'+k); return v == null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('jaq_'+k, v); }catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const virgule = n => n.toFixed(1).replace('.', ',');
+
+let items = [], imgW = 0, imgH = 0, imageURL = '', compteur = 0;
+
+function etat(t, travail){ const e = $('#etat'); e.textContent = t; e.classList.toggle('travail', !!travail); }
+
+/* ---------------- Photo ---------------- */
+['#f-cam', '#f-gal'].forEach(id => $(id).addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (f) charger(f);
+}));
+
+function lireImage(f){
+  return new Promise((ok, ko) => {
+    const u = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { URL.revokeObjectURL(u); ok(im); };
+    im.onerror = () => ko(new Error('image illisible'));
+    im.src = u;
+  });
+}
+
+async function charger(f){
+  etat('Préparation de la photo…', true);
+  let im;
+  try{ im = await lireImage(f); }catch(e){ etat('Impossible de lire cette image.'); return; }
+  const max = 1600, r = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(im.naturalWidth * r); c.height = Math.round(im.naturalHeight * r);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  imgW = c.width; imgH = c.height;
+  imageURL = c.toDataURL('image/jpeg', 0.85);
+  $('#photo').src = imageURL;
+  $('#scene').style.display = 'block';
+  $('#actions2').style.display = 'flex';
+  items = []; rendre();
+  analyser();
+}
+
+/* ---------------- Albert : repérage des jaquettes ---------------- */
+const CONSIGNE = `Cette photo montre une page, un écran ou une étagère avec plusieurs jaquettes de films ou de séries (DVD, Blu-ray, affiches, vignettes de catalogue).
+Repère CHAQUE jaquette visible, de gauche à droite puis de haut en bas. Pour chacune, lis le titre (il peut être stylisé) et identifie l'œuvre.
+Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
+{"jaquettes":[{"titre":"titre tel qu'imprimé sur la jaquette","titre_original":"titre original s'il est différent, sinon chaîne vide","annee":2010,"type":"film","boite":[x1,y1,x2,y2]}]}
+Règles :
+- type vaut "film" ou "serie".
+- boite = rectangle de la jaquette en coordonnées normalisées de 0 à 1000 (0,0 = coin haut gauche de la photo, 1000,1000 = coin bas droit).
+- annee = null si tu n'es pas sûr.
+- N'invente aucune jaquette absente de la photo.`;
+
+async function trouverModeleVision(base){
+  try{
+    const r = await fetch(base + '/v1/models');
+    if (!r.ok) return null;
+    const d = await r.json();
+    const l = d.data || [];
+    const m = l.find(m => /image-text-to-text|vision/i.test(m.type || ''))
+           || l.find(m => /Mistral-Small|gemma-3|VL|vision|pixtral/i.test(m.id || ''));
+    return m ? m.id : null;
+  }catch(e){ return null; }
+}
+
+async function albert(url){
+  const base = reg.get('relais', RELAIS_DEFAUT).replace(/\/$/, '');
+  const corps = m => JSON.stringify({
+    model: m, temperature: 0.1, max_tokens: 3000,
+    messages: [{ role: 'user', content: [
+      { type: 'text', text: CONSIGNE },
+      { type: 'image_url', image_url: { url } }
+    ]}]
+  });
+  const envoyer = m => fetch(base + '/v1/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corps(m)
+  });
+  let modele = reg.get('modele', MODELE_DEFAUT);
+  let r = await envoyer(modele);
+  if (!r.ok && [400, 404, 422].includes(r.status)){
+    const m2 = await trouverModeleVision(base);
+    if (m2 && m2 !== modele){ modele = m2; reg.set('modele', m2); r = await envoyer(m2); }
+  }
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  return extraireJSON(d.choices?.[0]?.message?.content || '');
+}
+
+function extraireJSON(txt){
+  txt = txt.replace(/```(?:json)?/gi, '').trim();
+  const i = txt.search(/[\[{]/);
+  if (i < 0) return [];
+  let o;
+  try{ o = JSON.parse(txt.slice(i)); }
+  catch(e){
+    const j = Math.max(txt.lastIndexOf('}'), txt.lastIndexOf(']'));
+    try{ o = JSON.parse(txt.slice(i, j + 1)); }catch(e2){ return []; }
+  }
+  const l = Array.isArray(o) ? o : (o.jaquettes || o.items || []);
+  return l.filter(j => j && j.titre && String(j.titre).trim());
+}
+
+function normBoite(b){
+  if (!Array.isArray(b) || b.length < 4) return null;
+  let [x1, y1, x2, y2] = b.map(Number);
+  if ([x1, y1, x2, y2].some(v => !isFinite(v))) return null;
+  const mx = Math.max(x1, y1, x2, y2);
+  let fx, fy;
+  if (mx <= 1.0001){ fx = fy = 1; }
+  else if (mx <= 1000){ fx = fy = 1000; }
+  else { fx = imgW; fy = imgH; }
+  x1 /= fx; x2 /= fx; y1 /= fy; y2 /= fy;
+  if (x2 < x1) [x1, x2] = [x2, x1];
+  if (y2 < y1) [y1, y2] = [y2, y1];
+  const c = v => Math.min(1, Math.max(0, v));
+  return [c(x1), c(y1), c(x2), c(y2)];
+}
+
+function nouvelItem(j, i, n){
+  const boite = normBoite(j.boite);
+  let x, y;
+  if (boite){ x = (boite[0] + boite[2]) / 2; y = boite[1] + (boite[3] - boite[1]) * 0.06; }
+  else { const col = 4; x = ((i % col) + 0.5) / col; y = 0.04 + Math.floor(i / col) * 0.14; }
+  return {
+    id: ++compteur, titre: String(j.titre).trim(), orig: String(j.titre_original || '').trim(),
+    annee: parseInt(j.annee) || null, type: /s[ée]rie/i.test(j.type || '') ? 'serie' : (j.type ? 'film' : ''),
+    boite, x, y: Math.min(y, 0.92), statut: 'recherche', avis: [], genres: [], moyenne: null
+  };
+}
+
+async function analyser(){
+  etat('Albert repère les jaquettes et lit les titres…', true);
+  let liste;
+  try{ liste = await albert(imageURL); }
+  catch(err){
+    etat('Albert est injoignable (' + err.message + '). Ajoute les titres avec « ＋ Ajouter un titre ».');
+    return;
+  }
+  if (!liste.length){ etat('Aucune jaquette reconnue. Ajoute les titres avec « ＋ Ajouter un titre ».'); return; }
+  items = liste.map((j, i) => nouvelItem(j, i, liste.length));
+  rendre();
+  etat(items.length + ' titre(s) trouvé(s) — recherche des genres et des avis…', true);
+  await parPaquets(items, 3, chercher);
+  etat('Terminé. Touche une note pour le détail, fais-la glisser pour la déplacer.');
+}
+
+async function parPaquets(liste, n, f){
+  let k = 0;
+  const ouvrier = async () => { while (k < liste.length){ const it = liste[k++]; await f(it); } };
+  await Promise.all(Array.from({ length: Math.min(n, liste.length) }, ouvrier));
+}
+
+/* ---------------- Recherche des avis ---------------- */
+const TYPES = {
+  Q11424:'film', Q24862:'film', Q202866:'film', Q506240:'film', Q229390:'film', Q20650540:'film',
+  Q5398426:'serie', Q581714:'serie', Q1259759:'serie', Q63952888:'serie', Q526877:'serie', Q117467246:'serie', Q15416:'serie'
+};
+const getJSON = async u => { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
+const sparql = q => getJSON('https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q)).then(d => d.results.bindings);
+
+async function rechercheWD(terme){
+  if (!terme) return [];
+  const u = 'https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&origin=*&type=item&limit=8&language=fr&uselang=fr&search=' + encodeURIComponent(terme);
+  try{ return (await getJSON(u)).search.map(s => s.id); }catch(e){ return []; }
+}
+
+async function wikidata(it){
+  const a = await rechercheWD(it.titre), b = await rechercheWD(it.orig);
+  const ids = [...new Set([...a, ...b])];
+  if (!ids.length) return null;
+  const rangs = {}; ids.forEach((id, i) => rangs[id] = Math.min(a.indexOf(id) < 0 ? 99 : a.indexOf(id), b.indexOf(id) < 0 ? 99 : b.indexOf(id)));
+  const rows = await sparql(`SELECT ?item ?itemLabel ?t ?date ?debut ?imdb ?genreLabel WHERE {
+    VALUES ?item { ${ids.map(i => 'wd:' + i).join(' ')} }
+    ?item wdt:P31 ?t . VALUES ?t { ${Object.keys(TYPES).map(i => 'wd:' + i).join(' ')} }
+    OPTIONAL { ?item wdt:P577 ?date }
+    OPTIONAL { ?item wdt:P580 ?debut }
+    OPTIONAL { ?item wdt:P345 ?imdb }
+    OPTIONAL { ?item wdt:P136 ?genre }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,en". }
+  }`);
+  const c = {};
+  for (const r of rows){
+    const id = r.item.value.split('/').pop();
+    const o = c[id] ||= { id, label: r.itemLabel?.value, types: new Set(), annees: [], imdb: '', genres: new Set() };
+    o.types.add(TYPES[r.t.value.split('/').pop()]);
+    for (const k of ['date', 'debut']) if (r[k]) { const y = parseInt(r[k].value); if (y) o.annees.push(y); }
+    if (r.imdb && /^tt/.test(r.imdb.value) && !o.imdb) o.imdb = r.imdb.value;
+    if (r.genreLabel && !/^Q\d+$/.test(r.genreLabel.value)) o.genres.add(r.genreLabel.value);
+  }
+  let meilleur = null, best = -1e9;
+  for (const o of Object.values(c)){
+    const annee = o.annees.length ? Math.min(...o.annees) : null;
+    let s = 10 - Math.min(rangs[o.id] ?? 20, 20);
+    if (it.type && o.types.has(it.type)) s += 6;
+    if (it.annee && annee){ const d = Math.abs(it.annee - annee); s += d === 0 ? 8 : d === 1 ? 5 : d > 2 ? -4 : 0; }
+    if (o.imdb) s += 1;
+    if (s > best){ best = s; meilleur = { ...o, annee }; }
+  }
+  if (!meilleur) return null;
+  const notes = await sparql(`SELECT ?score ?byLabel ?methLabel ?when WHERE {
+    wd:${meilleur.id} p:P444 ?st . ?st ps:P444 ?score .
+    OPTIONAL { ?st pq:P447 ?by } OPTIONAL { ?st pq:P459 ?meth } OPTIONAL { ?st pq:P585 ?when }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,en". }
+  }`).catch(() => []);
+  meilleur.notes = notes.map(n => ({
+    source: n.byLabel?.value || 'Wikidata', methode: n.methLabel?.value || '',
+    brut: n.score.value, quand: n.when?.value || ''
+  }));
+  return meilleur;
+}
+
+function sur10(brut){
+  const s = String(brut).replace(',', '.');
+  let m = s.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (m){ const v = +m[1], d = +m[2]; return d ? v * 10 / d : null; }
+  m = s.match(/(\d+(?:\.\d+)?)\s*%/);
+  if (m) return +m[1] / 10;
+  m = s.match(/^\s*(\d+(?:\.\d+)?)\s*$/);
+  if (m){ const v = +m[1]; return v <= 10 ? v : v <= 100 ? v / 10 : null; }
+  return null;
+}
+
+function cleSource(nom, methode){
+  const t = (nom + ' ' + methode).toLowerCase();
+  const public_ = /audience|user|utilisateur|spectat|public|popcorn/.test(t);
+  if (/rotten/.test(t)) return { cle: 'rt' + (public_ ? '-p' : ''), nom: 'Rotten Tomatoes' + (public_ ? ' (public)' : ' (critiques)') };
+  if (/metacritic|metascore/.test(t)) return { cle: 'mc' + (public_ ? '-p' : ''), nom: 'Metacritic' + (public_ ? ' (public)' : ' (critiques)') };
+  if (/imdb|internet movie/.test(t)) return { cle: 'imdb', nom: 'IMDb' };
+  if (/allocin/.test(t)) return { cle: 'allo' + (public_ ? '-p' : ''), nom: 'AlloCiné' + (public_ ? ' (spectateurs)' : ' (presse)') };
+  if (/tvmaze/.test(t)) return { cle: 'tvmaze', nom: 'TVmaze (spectateurs)' };
+  return { cle: t.trim(), nom: nom + (methode ? ' – ' + methode : '') };
+}
+
+const GENRES_EN = { action:'Action', adventure:'Aventure', animation:'Animation', comedy:'Comédie', crime:'Policier', documentary:'Documentaire', drama:'Drame', family:'Famille', fantasy:'Fantastique', horror:'Horreur', mystery:'Mystère', romance:'Romance', 'science-fiction':'Science-fiction', 'sci-fi':'Science-fiction', thriller:'Thriller', war:'Guerre', western:'Western', music:'Musique', musical:'Comédie musicale', history:'Histoire', biography:'Biographie', sport:'Sport', sports:'Sport', supernatural:'Surnaturel', children:'Jeunesse', anime:'Animé', espionage:'Espionnage', legal:'Judiciaire', medical:'Médical', 'short':'Court métrage', 'film-noir':'Film noir' };
+const genreFR = g => GENRES_EN[g.trim().toLowerCase()] || g.trim();
+function nettoyerGenre(g){
+  g = g.replace(/^(film|série télévisée|série|téléfilm)\s+(de\s+|d'|d’)?/i, '').trim();
+  return g ? g[0].toUpperCase() + g.slice(1) : '';
+}
+
+async function chercher(it){
+  it.statut = 'recherche'; it.avis = []; it.genres = []; it.moyenne = null; it.wd = null; it.imdb = '';
+  majItem(it);
+  const parCle = new Map();
+  const ajouter = (nom, methode, brut, quand) => {
+    const v = sur10(brut); if (v == null || v < 0 || v > 10) return;
+    const s = cleSource(nom, methode);
+    const deja = parCle.get(s.cle);
+    if (deja && quand && deja.quand && deja.quand > quand) return;
+    parCle.set(s.cle, { nom: s.nom, note: v, brut: String(brut), quand: quand || '9999' });
+  };
+  let genres = [];
+  try{
+    const wd = await wikidata(it);
+    if (wd){
+      it.wd = wd.id; it.imdb = wd.imdb; it.label = wd.label;
+      if (wd.annee) it.anneeTrouvee = wd.annee;
+      if (!it.type || !wd.types.has(it.type)) it.type = [...wd.types][0] || it.type;
+      genres = [...wd.genres].map(nettoyerGenre).filter(Boolean);
+      for (const n of wd.notes) ajouter(n.source, n.methode, n.brut, n.quand);
+    }
+  }catch(e){ console.warn('Wikidata', e); }
+
+  if (it.type === 'serie'){
+    try{
+      let s = null;
+      if (it.imdb) s = await getJSON('https://api.tvmaze.com/lookup/shows?imdb=' + it.imdb).catch(() => null);
+      if (!s) s = await getJSON('https://api.tvmaze.com/singlesearch/shows?q=' + encodeURIComponent(it.orig || it.titre)).catch(() => null);
+      if (s){
+        if (s.rating?.average) ajouter('TVmaze', '', s.rating.average + '/10', '9999');
+        if (!genres.length && s.genres) genres = s.genres.map(genreFR);
+        if (!it.imdb && s.externals?.imdb) it.imdb = s.externals.imdb;
+      }
+    }catch(e){ console.warn('TVmaze', e); }
+  }
+
+  const cle = reg.get('omdb', '').trim();
+  if (cle){
+    try{
+      const q = it.imdb ? 'i=' + it.imdb : 't=' + encodeURIComponent(it.orig || it.titre) + (it.annee ? '&y=' + it.annee : '');
+      const o = await getJSON('https://www.omdbapi.com/?apikey=' + encodeURIComponent(cle) + '&' + q);
+      if (o.Response === 'True'){
+        for (const r of (o.Ratings || [])) ajouter(r.Source, '', r.Value, '9999-12');
+        if (o.imdbRating && o.imdbRating !== 'N/A') ajouter('IMDb', '', o.imdbRating + '/10', '9999-12');
+        if (!genres.length && o.Genre && o.Genre !== 'N/A') genres = o.Genre.split(',').map(genreFR);
+        if (!it.imdb && o.imdbID) it.imdb = o.imdbID;
+      }
+    }catch(e){ console.warn('OMDb', e); }
+  }
+
+  it.genres = [...new Set(genres)].slice(0, 4);
+  it.avis = [...parCle.values()];
+  it.moyenne = it.avis.length ? it.avis.reduce((s, a) => s + a.note, 0) / it.avis.length : null;
+  it.statut = it.wd || it.avis.length ? 'ok' : 'introuvable';
+  majItem(it);
+}
+
+/* ---------------- Affichage ---------------- */
+const couleur = m => m == null ? 'var(--gris)' : m >= 7 ? 'var(--vert)' : m >= 5 ? 'var(--orange)' : 'var(--rouge)';
+const nomAffiche = it => it.label || it.titre;
+
+function contenuBadge(it){
+  const n = it.statut === 'recherche' ? '…' : it.moyenne == null ? '–' : '★ ' + virgule(it.moyenne);
+  return `<div class="n">${n}</div><div class="t">${esc(nomAffiche(it))}</div>${it.genres.length ? `<div class="g">${esc(it.genres.slice(0, 2).join(' · '))}</div>` : ''}`;
+}
+
+function contenuCarte(it){
+  const an = it.anneeTrouvee || it.annee;
+  const type = it.type === 'serie' ? 'Série' : it.type === 'film' ? 'Film' : '';
+  const meta = [type, an].filter(Boolean).join(' · ') + (it.label && it.label !== it.titre ? ` · lu : « ${esc(it.titre)} »` : '');
+  let corps;
+  if (it.statut === 'recherche') corps = '<div class="sources"><div>Recherche en cours…</div></div>';
+  else if (!it.avis.length) corps = `<div class="sources"><div>${it.statut === 'introuvable' ? 'Œuvre introuvable — corrige le titre.' : 'Aucune note trouvée en ligne.' + (reg.get('omdb', '') ? '' : ' Une clé OMDb (⚙️) en ajoute souvent.')}</div></div>`;
+  else corps = '<div class="sources">' + it.avis.map(a => `<div><b>${esc(a.nom)}</b><span>${esc(a.brut)} → ${virgule(a.note)}/10</span></div>`).join('') + '</div>';
+  const liens = [
+    it.wd ? `<a href="https://www.wikidata.org/wiki/${it.wd}" target="_blank" rel="noopener">Wikidata</a>` : '',
+    it.imdb ? `<a href="https://www.imdb.com/title/${it.imdb}/" target="_blank" rel="noopener">IMDb</a>` : '',
+    `<a href="https://www.allocine.fr/rechercher/?q=${encodeURIComponent(nomAffiche(it))}" target="_blank" rel="noopener">AlloCiné</a>`
+  ].filter(Boolean).join(' ');
+  return `<h2>${esc(nomAffiche(it))}</h2>
+    <div class="moy" style="background:${couleur(it.moyenne)}">${it.statut === 'recherche' ? '…' : it.moyenne == null ? '–' : virgule(it.moyenne)}<small>${it.avis.length ? 'moyenne de ' + it.avis.length + ' avis' : 'sur 10'}</small></div>
+    <div class="meta">${meta}</div>
+    ${it.genres.length ? '<div class="genres">' + it.genres.map(g => `<span>${esc(g)}</span>`).join('') + '</div>' : ''}
+    ${corps}
+    <div class="bas">${liens}<span class="esp"></span><button data-act="corriger">✏️ Corriger</button><button data-act="suppr">🗑️</button></div>`;
+}
+
+function rendre(){
+  const sc = $('#scene');
+  sc.querySelectorAll('.badge,.cadre').forEach(e => e.remove());
+  const li = $('#liste'); li.innerHTML = '';
+  if (!items.length && !imageURL){
+    li.innerHTML = '<div class="vide">Photographie une page ou une étagère avec plusieurs jaquettes.<br>Les titres sont repérés, puis chaque jaquette reçoit sa note moyenne.</div>';
+  }
+  for (const it of items){
+    if (it.boite){
+      const c = document.createElement('div'); c.className = 'cadre'; c.id = 'c' + it.id;
+      const [x1, y1, x2, y2] = it.boite;
+      Object.assign(c.style, { left: x1 * 100 + '%', top: y1 * 100 + '%', width: (x2 - x1) * 100 + '%', height: (y2 - y1) * 100 + '%' });
+      sc.appendChild(c);
+    }
+    const b = document.createElement('div'); b.className = 'badge'; b.id = 'b' + it.id;
+    sc.appendChild(b); deplacable(b, it);
+    const k = document.createElement('div'); k.className = 'carte'; k.id = 'k' + it.id;
+    k.addEventListener('click', e => {
+      const act = e.target.closest('button')?.dataset.act;
+      if (act === 'corriger') corriger(it);
+      else if (act === 'suppr'){ items = items.filter(x => x !== it); rendre(); }
+      else if (!e.target.closest('a')) eclairer($('#b' + it.id));
+    });
+    li.appendChild(k);
+    majItem(it);
+  }
+}
+
+function majItem(it){
+  const b = $('#b' + it.id), k = $('#k' + it.id);
+  if (b){
+    b.innerHTML = contenuBadge(it);
+    b.style.borderColor = couleur(it.statut === 'recherche' ? null : it.moyenne);
+    b.style.left = it.x * 100 + '%'; b.style.top = it.y * 100 + '%';
+  }
+  if (k) k.innerHTML = contenuCarte(it);
+}
+
+function eclairer(el){
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+function deplacable(el, it){
+  let dep = null;
+  el.addEventListener('pointerdown', e => {
+    dep = { x: e.clientX, y: e.clientY, bouge: false };
+    el.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  el.addEventListener('pointermove', e => {
+    if (!dep) return;
+    if (!dep.bouge && Math.hypot(e.clientX - dep.x, e.clientY - dep.y) < 8) return;
+    dep.bouge = true;
+    const r = $('#scene').getBoundingClientRect();
+    it.x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    it.y = Math.min(0.97, Math.max(0, (e.clientY - r.top - el.offsetHeight / 2) / r.height));
+    el.style.left = it.x * 100 + '%'; el.style.top = it.y * 100 + '%';
+  });
+  const fin = () => { if (dep && !dep.bouge) eclairer($('#k' + it.id)); dep = null; };
+  el.addEventListener('pointerup', fin);
+  el.addEventListener('pointercancel', () => dep = null);
+}
+
+function corriger(it){
+  const t = prompt('Titre exact du film ou de la série :', nomAffiche(it));
+  if (!t || !t.trim()) return;
+  const a = prompt('Année (facultatif) :', it.anneeTrouvee || it.annee || '');
+  it.titre = t.trim(); it.orig = ''; it.label = ''; it.annee = parseInt(a) || null; it.anneeTrouvee = null; it.type = '';
+  chercher(it);
+}
+
+$('#b-ajout').onclick = () => {
+  const t = prompt('Titre du film ou de la série :');
+  if (!t || !t.trim()) return;
+  const it = nouvelItem({ titre: t }, items.length);
+  it.x = 0.5; it.y = 0.45;
+  items.push(it); rendre(); chercher(it);
+  eclairer($('#b' + it.id));
+};
+
+/* ---------------- Export de l'image annotée ---------------- */
+$('#b-export').onclick = async () => {
+  if (!imageURL) return;
+  const im = new Image(); im.src = imageURL; await im.decode();
+  const c = document.createElement('canvas'); c.width = imgW; c.height = imgH;
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+  const sc = $('#scene').getBoundingClientRect(), k = imgW / sc.width;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  for (const it of items){
+    const b = $('#b' + it.id); if (!b) continue;
+    const w = b.offsetWidth * k, h = b.offsetHeight * k, x = it.x * imgW - w / 2, y = it.y * imgH;
+    const m = it.moyenne;
+    g.fillStyle = 'rgba(10,12,16,.86)';
+    g.strokeStyle = m == null ? css('--gris') : m >= 7 ? css('--vert') : m >= 5 ? css('--orange') : css('--rouge');
+    g.lineWidth = 2.5 * k;
+    g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 12 * k) : g.rect(x, y, w, h); g.fill(); g.stroke();
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = '#fff';
+    g.font = `800 ${19 * k}px system-ui,sans-serif`;
+    g.fillText(m == null ? '–' : '★ ' + virgule(m), x + w / 2, y + 5 * k, w - 10 * k);
+    g.fillStyle = '#d7dbe3'; g.font = `${11 * k}px system-ui,sans-serif`;
+    g.fillText(nomAffiche(it), x + w / 2, y + 27 * k, w - 12 * k);
+    if (it.genres.length){
+      g.fillStyle = '#9aa3b2'; g.font = `${10 * k}px system-ui,sans-serif`;
+      g.fillText(it.genres.slice(0, 2).join(' · '), x + w / 2, y + 41 * k, w - 12 * k);
+    }
+  }
+  c.toBlob(async blob => {
+    const f = new File([blob], 'jaquettes-notes.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })){
+      try{ await navigator.share({ files: [f] }); return; }catch(e){ if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = f.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
+};
+
+/* ---------------- Réglages ---------------- */
+$('#b-reglages').onclick = () => {
+  $('#r-relais').value = reg.get('relais', RELAIS_DEFAUT);
+  $('#r-omdb').value = reg.get('omdb', '');
+  $('#dlg').showModal();
+};
+$('#r-annuler').onclick = () => $('#dlg').close();
+$('#r-ok').onclick = () => {
+  reg.set('relais', $('#r-relais').value.trim() || RELAIS_DEFAUT);
+  reg.set('omdb', $('#r-omdb').value.trim());
+  $('#dlg').close();
+};
+</script>
+</body>
+</html>
